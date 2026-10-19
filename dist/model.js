@@ -2,8 +2,8 @@
 (function (root) {
  'use strict';
  const P=14, W=1320, H=1220, Y=278, ROWS=63;
- const holes=[], holeMap=new Map(), groupMap=new Map();
- const add=(id,x,y,group,label)=>{const h={id,x,y,group,label};holes.push(h);holeMap.set(id,h);if(!groupMap.has(group))groupMap.set(group,[]);groupMap.get(group).push(h);};
+ const holes=[], holeMap=new Map(), groupMap=new Map(), holePositions=new Map();
+ const add=(id,x,y,group,label)=>{const h={id,x,y,group,label};holes.push(h);holeMap.set(id,h);holePositions.set(`${x}:${y}`,h);if(!groupMap.has(group))groupMap.set(group,[]);groupMap.get(group).push(h);};
  for(let b=0;b<4;b++)for(let r=0;r<ROWS;r++)for(let c=0;c<10;c++){
   const x=120+b*286+(c<5?c*P:98+(c-5)*P);
   add(`b${b}-${r}-${c}`,x,Y+r*P,`b${b}:${r}:${c<5?'L':'R'}`,`${b+1}${String.fromCharCode(65+c)}${r+1}`);
@@ -40,10 +40,35 @@
  }
  function pins(part){const a=(part.rotation||0)*Math.PI/180,c=Math.cos(a),s=Math.sin(a);return localPins(part).map(p=>({...p,part:part.id,x:Math.round((part.x+p.x*c-p.y*s)*100)/100,y:Math.round((part.y+p.x*s+p.y*c)*100)/100,name:part.pinNames?.[p.n]||library[part.type].names?.[Number(p.n)-1]||`S${p.n}`,net:part.nets?.[p.n]||null}));}
  function nearest(x,y,max=11){let best=null,dist=max;for(const h of holes){const d=Math.hypot(h.x-x,h.y-y);if(d<dist){best=h;dist=d;}}return best;}
- function mounted(part){return pins(part).every(p=>!!nearest(p.x,p.y,1));}
- function snapPart(part,x,y){const p0=pins({...part,x,y})[0],h=nearest(p0.x,p0.y,1000);if(!h)return {...part,x,y};return {...part,x:x+h.x-p0.x,y:y+h.y-p0.y};}
- function epPoint(ep,state){if(ep.hole)return holeMap.get(ep.hole)||null;if(ep.post)return posts.find(p=>p.id===ep.post)||null;if(ep.part){const c=state.parts.find(c=>c.id===ep.part);return c?pins(c).find(p=>p.n===String(ep.pin))||null:null;}return null;}
- function endpointNode(ep,state){if(ep.hole)return holeMap.get(ep.hole)?.group||null;if(ep.post)return posts.some(p=>p.id===ep.post)?'post:'+ep.post:null;if(ep.part){const p=epPoint(ep,state),h=p&&nearest(p.x,p.y,1);return h?.group||`pin:${ep.part}:${ep.pin}`;}return null;}
+ const twoRow=part=>['dip','fpga','switch','display'].includes(library[part?.type]?.kind);
+ function allowedRotations(part){return !part||!Object.hasOwn(library,part.type)?[]:twoRow(part)?[0,180]:[0,90,180,270];}
+ const pinHole=pin=>holePositions.get(`${pin.x}:${pin.y}`)||(!Number.isInteger(pin.x)||!Number.isInteger(pin.y)?nearest(pin.x,pin.y,1):null);
+ function mounted(part){
+  if(!part||!Object.hasOwn(library,part.type)||!allowedRotations(part).includes(part.rotation??0))return false;
+  const hs=pins(part).map(pinHole);
+  // Every leg of a dual-row package needs its own isolated five-hole strip.
+  // Merely landing both sides in one strip would short the opposite pins.
+  return hs.every(Boolean)&&(!twoRow(part)||new Set(hs.map(h=>h.group)).size===hs.length);
+ }
+ function trySnapPart(part,x,y,{maxDistance=98}={}){
+  if(!part||!Object.hasOwn(library,part.type)||!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(maxDistance)||maxDistance<0||!allowedRotations(part).includes(part.rotation??0))return null;
+  const first=pins({...part,x:0,y:0})[0],limit=maxDistance*maxDistance;
+  const candidates=holes.map(h=>({h,d:(h.x-x-first.x)**2+(h.y-y-first.y)**2})).filter(c=>c.d<=limit).sort((a,b)=>a.d-b.d);
+  for(const {h}of candidates){const placed={...part,x:h.x-first.x,y:h.y-first.y};if(mounted(placed))return placed;}
+  return null;
+ }
+ // Existing callers always receive a part. New editing code uses trySnapPart
+ // to distinguish an impossible placement from a successful snap.
+ function snapPart(part,x,y){return trySnapPart(part,x,y)||{...part};}
+ function rotatePart(part,rotation){
+  if(!part||!allowedRotations(part).includes(rotation))return null;
+  const center=p=>{const ps=pins({...p,x:0,y:0});return{x:(Math.min(...ps.map(q=>q.x))+Math.max(...ps.map(q=>q.x)))/2,y:(Math.min(...ps.map(q=>q.y))+Math.max(...ps.map(q=>q.y)))/2};};
+  const from=center(part),to=center({...part,rotation});
+  return trySnapPart({...part,rotation},part.x+from.x-to.x,part.y+from.y-to.y);
+ }
+ function canonicalPin(pin,count){const n=typeof pin==='number'&&Number.isInteger(pin)?String(pin):typeof pin==='string'&&/^[1-9][0-9]*$/.test(pin)?pin:null;return n&&Number(n)>0&&Number(n)<=count?n:null;}
+ function epPoint(ep,state){if(!ep||typeof ep!=='object')return null;if(ep.hole)return holeMap.get(ep.hole)||null;if(ep.post)return posts.find(p=>p.id===ep.post)||null;if(ep.part){const c=state.parts.find(c=>c.id===ep.part),n=c&&canonicalPin(ep.pin,library[c.type]?.count);return n?pins(c).find(p=>p.n===n)||null:null;}return null;}
+ function endpointNode(ep,state){if(!ep||typeof ep!=='object')return null;if(ep.hole)return holeMap.get(ep.hole)?.group||null;if(ep.post)return posts.some(p=>p.id===ep.post)?'post:'+ep.post:null;if(ep.part){const p=epPoint(ep,state);if(!p)return null;const h=pinHole(p);return h?.group||`pin:${ep.part}:${p.n}`;}return null;}
  class Union{constructor(){this.map=new Map();}find(a){if(!this.map.has(a))this.map.set(a,a);if(this.map.get(a)!==a)this.map.set(a,this.find(this.map.get(a)));return this.map.get(a);}join(a,b){if(a&&b)this.map.set(this.find(a),this.find(b));}}
  function analyze(state){
   const uf=new Union(),issues=[],occupied=new Map(),pinRecords=[];
@@ -54,21 +79,22 @@
    if(h){if(!occupied.has(h.id))occupied.set(h.id,[]);occupied.get(h.id).push(`${part.ref}.${pin.n}`);}
   }}
   for(const w of state.wires){const a=endpointNode(w.a,state),b=endpointNode(w.b,state);if(!a||!b)issues.push({level:'error',text:`${w.id} 有无效端点`,wire:w.id});else uf.join(a,b);for(const ep of [w.a,w.b]){const p=ep.part&&epPoint(ep,state),hole=ep.hole||(p&&nearest(p.x,p.y,1)?.id);if(hole){if(!occupied.has(hole))occupied.set(hole,[]);occupied.get(hole).push(w.id);}}}
-  // A closed SPST joins only its two contacts. Open contacts have no implicit bias.
-  const intentional=new Union();
-  for(const part of state.parts.filter(p=>p.type==='dip8'))for(let i=1;i<=8;i++)if(part.switches?.[i-1]){uf.join(endpointNode({part:part.id,pin:String(i)},state),endpointNode({part:part.id,pin:String(17-i)},state));const a=part.nets?.[i],b=part.nets?.[17-i];if(typeof a==='string'&&typeof b==='string'&&((a.startsWith('SEL_')&&b==='+5V')||(b.startsWith('SEL_')&&a==='+5V')))intentional.join(a,b);}
+  // Keep the pre-switch components: closing a contact may join signal names,
+  // but must not hide an accidental jumper already joining different nets.
+  const beforeSwitch=new Map([...uf.map.keys()].map(node=>[node,uf.find(node)]));
+  for(const part of state.parts.filter(p=>p.type==='dip8'))for(let i=1;i<=8;i++)if(part.switches?.[i-1])uf.join(endpointNode({part:part.id,pin:String(i)},state),endpointNode({part:part.id,pin:String(17-i)},state));
   for(const [hole,items]of occupied)if(items.length>1)issues.push({level:'error',text:`${holeMap.get(hole).label} 重复插入：${items.join('、')}`,hole});
-  const expected=new Map(),actual=new Map();
-  const record=(net,node,label)=>{if(!net||net.startsWith('NC'))return;if(!expected.has(net))expected.set(net,[]);expected.get(net).push({node,label});const r=uf.find(node);if(!actual.has(r))actual.set(r,{nets:new Set(),pins:[]});actual.get(r).nets.add(net);actual.get(r).pins.push(label);};
+  const expected=new Map(),actual=new Map(),baseNets=new Map();
+  const record=(net,node,label)=>{if(!net||net.startsWith('NC'))return;if(!expected.has(net))expected.set(net,[]);expected.get(net).push({node,label});const r=uf.find(node),base=beforeSwitch.get(node)||node;if(!baseNets.has(base))baseNets.set(base,new Set());baseNets.get(base).add(net);if(!actual.has(r))actual.set(r,{nets:new Set(),pins:[],bases:new Set()});actual.get(r).nets.add(net);actual.get(r).pins.push(label);actual.get(r).bases.add(base);};
   for(const p of pinRecords)record(p.net,p.node,`${p.ref}.${p.n} ${p.name}`);
   for(const p of posts)if(p.id!=='aux')record(p.id==='v5'?'+5V':p.id==='gnd'?'GND':'DISPLAY_VDD','post:'+p.id,p.name);
-  // Switch contacts intentionally share +5V with a select signal when ON.
-  const compatible=nets=>new Set([...nets].map(n=>intentional.find(n))).size===1;
-  for(const [node,v]of actual)if(v.nets.size>1&&!compatible(v.nets))issues.push({level:'error',text:`误连 / 短接：${[...v.nets].join(' ↔ ')}`,node});
+  // Intentional connections follow physical switch contacts, not SEL_* labels.
+  // Distinct supply posts remain incompatible even through a closed switch.
+  const compatible=v=>[...v.nets].filter(n=>['+5V','GND','DISPLAY_VDD'].includes(n)).length<2&&[...v.bases].every(base=>baseNets.get(base).size===1);
+  for(const [node,v]of actual)if(v.nets.size>1&&!compatible(v))issues.push({level:'error',text:`误连 / 短接：${[...v.nets].join(' ↔ ')}`,node});
   const nets=[];
   for(const [name,records]of expected){const groups=new Set(records.map(r=>uf.find(r.node)));const ok=groups.size===1;nets.push({name,ok,groups:groups.size,records});if(!ok)issues.push({level:'open',text:`${name} 分成 ${groups.size} 个未导通的部分`,net:name});}
-  const timer=state.parts.find(p=>p.ref==='U3'),fpga=state.parts.find(p=>p.type==='fpga');
-  const clock=!!(timer&&fpga&&uf.find(endpointNode({part:timer.id,pin:'3'},state))===uf.find(endpointNode({part:fpga.id,pin:'17'},state)));
+  const clock=state.parts.filter(p=>p.type==='timer').some(timer=>state.parts.filter(p=>p.type==='fpga').some(fpga=>uf.find(endpointNode({part:timer.id,pin:'3'},state))===uf.find(endpointNode({part:fpga.id,pin:'17'},state))));
   return {uf,issues,occupied,pinRecords,nets,clock,shorts:issues.filter(i=>i.level==='error'),opens:issues.filter(i=>i.level==='open')};
  }
  const clone=x=>JSON.parse(JSON.stringify(x));
@@ -134,11 +160,23 @@
  function validateFile(data){
   if(!data||data.schema!=='cable-breadboard/v1'||!Array.isArray(data.parts)||!Array.isArray(data.wires))throw Error('文件格式不是接线工作台方案');
   if(data.parts.length>200||data.wires.length>800)throw Error('方案超过 200 个器件或 800 根跳线');
-  const ids=new Set();for(const p of data.parts){if(!p||!Object.hasOwn(library,p.type)||typeof p.id!=='string'||!p.id||p.id.length>80||ids.has(p.id)||typeof p.ref!=='string'||typeof p.value!=='string'||!Number.isFinite(p.x)||!Number.isFinite(p.y)||Math.abs(p.x)>5000||Math.abs(p.y)>5000||![0,90,180,270].includes(p.rotation||0))throw Error('器件数据无效');if(p.nets&&(typeof p.nets!=='object'||Array.isArray(p.nets)||Object.values(p.nets).some(n=>typeof n!=='string'||n.length>100)))throw Error('网络名称无效');if(p.pinNames&&(typeof p.pinNames!=='object'||Array.isArray(p.pinNames)||Object.values(p.pinNames).some(n=>typeof n!=='string')))throw Error('引脚名称无效');if(p.switches&&(!Array.isArray(p.switches)||p.switches.length!==8||p.switches.some(v=>typeof v!=='boolean')))throw Error('拨码数据无效');ids.add(p.id);}
-  const validEp=ep=>ep&&['hole','post','part'].filter(k=>Object.hasOwn(ep,k)).length===1&&((ep.hole&&holeMap.has(ep.hole))||(ep.post&&posts.some(p=>p.id===ep.post))||(ep.part&&ids.has(ep.part)&&Number.isInteger(Number(ep.pin))&&Number(ep.pin)>0&&Number(ep.pin)<=library[data.parts.find(p=>p.id===ep.part).type].count));
-  const wids=new Set();for(const w of data.wires){if(!w||typeof w.id!=='string'||wids.has(w.id)||!validEp(w.a)||!validEp(w.b)||!Array.isArray(w.bends)||w.bends.some(p=>!p||!Number.isFinite(p.x)||!Number.isFinite(p.y)||Math.abs(p.x)>10000||Math.abs(p.y)>10000)||(w.net!==undefined&&typeof w.net!=='string')||!/^#[0-9a-f]{6}$/i.test(w.color))throw Error('跳线数据无效');wids.add(w.id);}
+  const validId=id=>typeof id==='string'&&/^[A-Za-z0-9_-]{1,80}$/.test(id);
+  const validText=(s,max)=>typeof s==='string'&&s.length<=max&&!/[\u0000-\u001f\u007f]/.test(s);
+  const validPinMap=(map,count)=>map!==null&&typeof map==='object'&&!Array.isArray(map)&&[Object.prototype,null].includes(Object.getPrototypeOf(map))&&Object.entries(map).every(([key,value])=>canonicalPin(key,count)&&validText(value,100));
+  const ids=new Map(),refs=new Set();
+  for(const p of data.parts){
+   if(!p||!Object.hasOwn(library,p.type)||!validId(p.id)||ids.has(p.id)||!validText(p.ref,24)||!p.ref.trim()||p.ref!==p.ref.trim()||refs.has(p.ref)||!validText(p.value,100)||!Number.isFinite(p.x)||!Number.isFinite(p.y)||Math.abs(p.x)>5000||Math.abs(p.y)>5000||(p.rotation!==undefined&&![0,90,180,270].includes(p.rotation)))throw Error('器件数据无效：编号只能使用字母、数字、下划线和连字符；标号须唯一且不超过 24 字');
+   const count=library[p.type].count;
+   if(p.nets!==undefined&&!validPinMap(p.nets,count))throw Error('网络名称或引脚编号无效');
+   if(p.pinNames!==undefined&&!validPinMap(p.pinNames,count))throw Error('引脚名称或引脚编号无效');
+   if(p.switches!==undefined&&(!Array.isArray(p.switches)||p.switches.length!==8||p.switches.some(v=>typeof v!=='boolean')))throw Error('拨码数据无效');
+   if(['bridge','locked'].some(key=>p[key]!==undefined&&typeof p[key]!=='boolean'))throw Error('器件状态须为布尔值');
+   ids.set(p.id,p);refs.add(p.ref);
+  }
+  const validEp=ep=>ep&&typeof ep==='object'&&!Array.isArray(ep)&&['hole','post','part'].filter(k=>Object.hasOwn(ep,k)).length===1&&((typeof ep.hole==='string'&&holeMap.has(ep.hole))||(typeof ep.post==='string'&&posts.some(p=>p.id===ep.post))||(typeof ep.part==='string'&&ids.has(ep.part)&&canonicalPin(ep.pin,library[ids.get(ep.part).type].count)));
+  const wids=new Set();for(const w of data.wires){if(!w||!validId(w.id)||wids.has(w.id)||!validEp(w.a)||!validEp(w.b)||!Array.isArray(w.bends)||w.bends.length>256||w.bends.some(p=>!p||!Number.isFinite(p.x)||!Number.isFinite(p.y)||Math.abs(p.x)>10000||Math.abs(p.y)>10000)||(w.net!==undefined&&!validText(w.net,100))||typeof w.color!=='string'||!/^#[0-9a-f]{6}$/i.test(w.color))throw Error('跳线数据无效：检查编号、端点、网络名称和折点数量（最多 256 个）');wids.add(w.id);}
   return clone(data);
  }
- root.BB={P,W,H,Y,ROWS,holes,holeMap,groupMap,posts,library,pins,localPins,nearest,mounted,snapPart,epPoint,endpointNode,analyze,createStarter,validateFile,clone,colorFor};
+ root.BB={P,W,H,Y,ROWS,holes,holeMap,groupMap,posts,library,pins,localPins,nearest,mounted,allowedRotations,trySnapPart,snapPart,rotatePart,epPoint,endpointNode,analyze,createStarter,validateFile,clone,colorFor};
  if(typeof module!=='undefined')module.exports=root.BB;
 })(typeof window!=='undefined'?window:globalThis);

@@ -6,3 +6,56 @@
 .canvas-route-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-shrink:0}.routing-status{font-size:9px;color:#738c73;white-space:nowrap}.canvas-route-actions .text-button{white-space:nowrap}.physical-inspection h3{line-height:1.6}.physical-issues{border:1px solid #ecdcd3;border-radius:5px;overflow:hidden;max-height:230px;overflow-y:auto}.physical-issue{display:grid;grid-template-columns:1fr auto;gap:4px;width:100%;text-align:left;padding:10px;border-bottom:1px solid #efdfd7;background:#fff9f4;line-height:1.6}.physical-issue:last-child{border-bottom:0}.physical-issue:hover{background:#f8ebdf}.physical-issue b{font:600 10px/1.6 Consolas,monospace;color:#a34b3d}.physical-issue span{font-size:9px;color:#926846}.physical-issue small{grid-column:1/-1;font-size:9px;color:#986f5c;overflow-wrap:anywhere}.wire-conflict .wire-core{stroke:#c5483c;stroke-dasharray:6 4}.check-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.check-summary span{line-height:1.6}.dialog .physical-inspection{padding:15px 0}.dialog .physical-issues{max-height:210px}.dialog .physical-issue b{color:#a34b3d}
 @media(max-width:1200px){.canvas-route-actions{gap:8px}.routing-status{display:none}.canvas-title .canvas-version{display:none}}
 @media(max-width:680px){.canvas-topline{flex-wrap:wrap;gap:7px;height:auto;min-height:48px;padding-bottom:7px}.canvas-route-actions{width:100%;gap:12px;justify-content:space-between}.routing-status{display:inline;font-size:8px;margin-right:auto}.canvas-route-actions .text-button{font-size:9px}.check-summary{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:16px}}
+
+/* Keep operational guidance readable on classroom screens and small displays. */
+.muted,
+.canvas-hint,
+.pin-row span,
+.pin-row small,
+.inspector-bottom .text-button,
+#selectionText,
+.dialog p,
+.dialog li,
+.notice p,
+.wire-reading-note span,
+.wire-rule p,
+.wire-endpoint small,
+.check-summary span,
+.routing-status,
+.footer-status,
+.footer-metrics,
+.footer-metrics b {
+  color: #53654b;
+}
+.muted,
+.pin-row,
+.pin-row span,
+.pin-row small,
+.wire-reading-note span,
+.wire-rule p,
+.wire-endpoint small,
+.inspector-bottom .text-button,
+.notice p,
+.check-summary span,
+.routing-status {
+  font-size: 11px;
+  line-height: 1.7;
+}
+.dialog p,
+.dialog li { font-size: 12px; }
+.good { color: #166f55 !important; }
+.bad { color: #a13f30 !important; }
+.canvas-panel,
+.panel { min-width: 0; }
+.canvas-hint { max-width: calc(100% - 24px); }
+.canvas-hint,
+#selectionText { font-size: 10px; }
+#boardSvg:focus-visible { outline: 2px solid #259b88; outline-offset: -3px; }
+#statusText.save-warning { color: #a13f30; font-weight: 650; }
+@media (max-width: 680px) {
+  .wire-reading-note strong { font-size: 11px; }
+  .wire-reading-note span { font-size: 11px; }
+  .canvas-route-actions .text-button { font-size: 10px; }
+  .routing-status { font-size: 10px; }
+  .topology-note { font-size: 9px; }
+}

@@ -22,6 +22,7 @@
   for(const module of modules){
    const display=state.parts.find(p=>p.id===module.display),decoder=state.parts.find(p=>p.id===module.decoder);
    if(display?.type!=='display'||decoder?.type!=='decoder')fail(`${module.display} 或 ${module.decoder} 缺失或型号已更改`);
+   if(!display.nets||!decoder.nets)fail(`${!display.nets?module.display:module.decoder} 缺少引脚网络数据`);
    if(!B.mounted(display)||!B.mounted(decoder))fail(`${module.display} 或 ${module.decoder} 尚未插入有效孔位`);
    module.displayPart=display;module.decoderPart=decoder;
    for(const pin of [3,8])commonNodes.add(B.endpointNode({part:display.id,pin:String(pin)},state));

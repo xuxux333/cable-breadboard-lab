@@ -4,7 +4,7 @@ const http = require('node:http');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const root = path.resolve(__dirname, '../dist');
-const port = Number(process.env.PORT || process.argv[2] || 4173);
+const port = Number(process.argv[2] || process.env.PORT || 4173);
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
   console.error('PORT must be an integer between 1 and 65535.');
   process.exit(1);
@@ -36,7 +36,7 @@ const server = http.createServer(async (request, response) => {
   }
   const file = path.resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));
   const relative = path.relative(root, file);
-  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+  if (relative === '..' || relative.startsWith('..' + path.sep) || path.isAbsolute(relative)) {
     response.writeHead(403);
     return response.end('Forbidden');
   }
@@ -44,7 +44,7 @@ const server = http.createServer(async (request, response) => {
     // Reject symlinks that resolve outside dist even when the URL itself is safe.
     const real = await fs.realpath(file);
     const realRelative = path.relative(root, real);
-    if (realRelative.startsWith('..') || path.isAbsolute(realRelative)) {
+    if (realRelative === '..' || realRelative.startsWith('..' + path.sep) || path.isAbsolute(realRelative)) {
       response.writeHead(403);
       return response.end('Forbidden');
     }
@@ -53,13 +53,15 @@ const server = http.createServer(async (request, response) => {
       response.writeHead(404);
       return response.end('Not found');
     }
+    // Read before sending headers so a failed read cannot become a truncated 200.
+    const content = request.method === 'HEAD' ? null : await fs.readFile(real);
     response.writeHead(200, {
       'Content-Type': types[path.extname(real)] || 'application/octet-stream',
-      'Content-Length': stat.size,
+      'Content-Length': content ? content.length : stat.size,
       'X-Content-Type-Options': 'nosniff',
       'Cache-Control': 'no-store'
     });
-    response.end(request.method === 'HEAD' ? undefined : await fs.readFile(real));
+    response.end(content ?? undefined);
   } catch (error) {
     if (!response.headersSent) response.writeHead(error.code === 'ENOENT' ? 404 : 500);
     response.end(error.code === 'ENOENT' ? 'Not found' : 'Unable to read file');

@@ -1,6 +1,6 @@
 {
   "name": "cable-breadboard-lab",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": false,
   "description": "可离线使用的八路数字电缆对线器面包板接线工作台",
   "license": "MIT",
@@ -13,8 +13,9 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test tests/model.test.cjs tests/display-upgrade.test.cjs tests/routing.test.cjs tests/routing-independent.test.cjs",
+    "test": "node scripts/test.cjs",
     "build": "node scripts/build-offline.cjs",
+    "release": "node scripts/package-release.cjs",
     "start": "node scripts/serve.cjs"
   }
 }

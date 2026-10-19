@@ -34,10 +34,10 @@
   </defs></svg>
 
   <header class="app-header">
-    <a class="brand" href="./index.html" aria-label="接线工作台首页">
+    <div class="brand" aria-label="接线工作台">
       <span class="brand-mark"><svg class="icon"><use href="#i-board"/></svg></span>
       <span><strong>接线工作台<span class="brand-dot">.</span></strong><small>CABLE MAPPER LAB</small></span>
-    </a>
+    </div>
     <div class="header-divider"></div>
     <div class="project-heading"><span class="eyebrow">课程实验 / 布线编辑器</span><h1>八路数字电缆对线器</h1></div>
     <div class="header-actions">
@@ -72,23 +72,23 @@
         <div class="toolbar-spacer"></div>
         <div class="tool-group zoom-group"><button class="icon-button" data-action="zoomOut" title="缩小" aria-label="缩小"><svg class="icon"><use href="#i-minus"/></svg></button><span id="zoomText" class="zoom-text">100%</span><button class="icon-button" data-action="zoomIn" title="放大" aria-label="放大"><svg class="icon"><use href="#i-plus"/></svg></button><button class="icon-button" data-action="fit" title="适合画布 (F)" aria-label="适合画布"><svg class="icon"><use href="#i-fit"/></svg></button></div>
         <span class="tool-separator"></span>
-        <div class="layers-wrap"><button class="icon-button" data-action="layers" title="显示图层" aria-label="显示图层" aria-controls="layersPanel"><svg class="icon"><use href="#i-layers"/></svg></button><div id="layersPanel" class="layers-panel" hidden><strong>显示图层</strong><label><input id="showWires" type="checkbox" checked>导线</label><label><input id="showLabels" type="checkbox" checked>器件与引脚标签</label><label><input id="showTopology" type="checkbox">面包板内部连接</label></div></div>
+        <div class="layers-wrap"><button class="icon-button" data-action="layers" title="显示图层" aria-label="显示图层" aria-controls="layersPanel" aria-expanded="false"><svg class="icon"><use href="#i-layers"/></svg></button><div id="layersPanel" class="layers-panel" hidden><strong>显示图层</strong><label><input id="showWires" type="checkbox" checked>导线</label><label><input id="showLabels" type="checkbox" checked>器件与引脚标签</label><label><input id="showTopology" type="checkbox">面包板内部连接</label></div></div>
       </div>
       <div class="wire-reading-note" aria-label="跳线连接方式"><svg viewBox="0 0 61 22" aria-hidden="true"><path d="M5 16H30V6H56" fill="none" stroke="#378a76" stroke-width="2.4" stroke-linejoin="round"/><circle cx="5" cy="16" r="4" fill="#fffef6" stroke="#378a76" stroke-width="1.6"/><circle cx="56" cy="6" r="4" fill="#fffef6" stroke="#378a76" stroke-width="1.6"/></svg><div><strong>跳线仅两端插入；中途经过 / 交叉不连接</strong><span>直角路线避开器件本体；红色虚线 = 需避让。移动后可检查 / 重排。空心圆 = 插入点，方形框 = 绝缘折点。</span></div></div>
       <div class="stage-wrap">
-        <div id="stage" class="stage"><svg id="boardSvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="可编辑实验面包板"></svg></div>
+        <div id="stage" class="stage"><svg id="boardSvg" xmlns="http://www.w3.org/2000/svg" role="group" tabindex="0" aria-label="可编辑实验面包板" aria-describedby="boardHelp"></svg></div>
         <div class="canvas-legend"><span><i class="legend-dot legend-power"></i>电源</span><span><i class="legend-dot legend-ground"></i>地</span><span><i class="legend-dot legend-clock"></i>555 时钟</span><span><i class="legend-dot legend-signal"></i>信号</span></div>
-        <div class="canvas-hint"><kbd>空格</kbd> 拖动画布<span>·</span>滚轮缩放</div>
+        <div id="boardHelp" class="canvas-hint"><kbd>空格</kbd> 拖动画布<span>·</span>滚轮缩放<span>·</span>触屏：空白处拖动 / 双指缩放</div>
       </div>
-      <div class="canvas-bottomline"><span class="topology-note"><svg class="icon"><use href="#i-board"/></svg>五孔横连 <i>·</i> 中槽隔离 <i>·</i> 电源轨分段</span><span id="selectionText">未选择对象</span></div>
+      <div class="canvas-bottomline"><span class="topology-note"><svg class="icon"><use href="#i-board"/></svg>五孔横连 <i>·</i> 中槽隔离 <i>·</i> 电源轨分段</span><span id="selectionText" aria-live="polite">未选择对象</span></div>
     </section>
 
     <aside class="inspector-panel panel" aria-label="属性与连接">
       <div class="panel-heading"><div><span class="eyebrow">WORKSPACE</span><h2>属性与连接</h2></div><span class="panel-number">02</span></div>
-      <div class="panel-tabs" role="tablist" aria-label="查看面板"><button class="panel-tab active" data-tab="inspector" role="tab" aria-selected="true">属性</button><button class="panel-tab" data-tab="nets" role="tab" aria-selected="false">连接网络</button><button class="panel-tab" data-tab="help" role="tab" aria-selected="false">指引</button></div>
+      <div class="panel-tabs" role="tablist" aria-label="查看面板"><button id="tab-inspector" class="panel-tab active" data-tab="inspector" role="tab" aria-selected="true" aria-controls="inspector" tabindex="0">属性</button><button id="tab-nets" class="panel-tab" data-tab="nets" role="tab" aria-selected="false" aria-controls="netList" tabindex="-1">连接网络</button><button id="tab-help" class="panel-tab" data-tab="help" role="tab" aria-selected="false" aria-controls="inspector" tabindex="-1">指引</button></div>
       <div class="inspector-scroll">
-        <div id="inspector"><div class="inspector-empty"><div class="empty-glyph"><svg class="icon"><use href="#i-cursor"/></svg></div><h3>从一个器件开始</h3><p>选择面包板上的器件或导线，查看引脚、调整位置与连接。</p></div><div class="inspector-section"><h3>当前方案</h3><div class="field-row"><span>译码器</span><strong>CD4511BE × 2</strong></div><div class="field-row"><span>主控示意</span><strong>XC3S50AN · 40 脚</strong></div><div class="field-row"><span>时钟来源</span><strong>NE555 → FPGA</strong></div></div><div class="notice"><svg class="icon"><use href="#i-spark"/></svg><p>555 输出须接入 FPGA 时钟端。使用探针，检查孔位之间的真实连通关系。</p></div></div>
-        <div id="netList" hidden></div>
+        <div id="inspector" role="tabpanel" aria-labelledby="tab-inspector"><div class="inspector-empty"><div class="empty-glyph"><svg class="icon"><use href="#i-cursor"/></svg></div><h3>从一个器件开始</h3><p>选择面包板上的器件或导线，查看引脚、调整位置与连接。</p></div><div class="inspector-section"><h3>当前方案</h3><div class="field-row"><span>译码器</span><strong>CD4511BE × 2</strong></div><div class="field-row"><span>主控示意</span><strong>XC3S50AN · 40 脚</strong></div><div class="field-row"><span>时钟来源</span><strong>NE555 → FPGA</strong></div></div><div class="notice"><svg class="icon"><use href="#i-spark"/></svg><p>555 输出须接入 FPGA 时钟端。使用探针，检查孔位之间的真实连通关系。</p></div></div>
+        <div id="netList" role="tabpanel" aria-labelledby="tab-nets" hidden></div>
       </div>
       <div class="inspector-bottom"><button class="button button-outline full-width" data-action="saveSvg"><svg class="icon"><use href="#i-image"/></svg>导出布线图</button><button class="text-button full-width" data-action="import"><svg class="icon"><use href="#i-upload"/></svg>导入已保存方案</button></div>
     </aside>
@@ -101,7 +101,6 @@
   <script src="model.js"></script>
   <script src="display-upgrade.js"></script>
   <script src="routing.js"></script>
-  <script src="reference.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

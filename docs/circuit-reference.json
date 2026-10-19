@@ -1,4 +1,4 @@
-window.CIRCUIT_REFERENCE = {
+{
   "scope": "Inventory-constrained functional connection diagram; FPGA square with logical inputs/outputs only; no added components",
   "chips": {
     "555": {
@@ -248,6 +248,69 @@ window.CIRCUIT_REFERENCE = {
         "16": "VDD"
       },
       "sourceId": "ti-cd4511"
+    },
+    "DIP": {
+      "type": "SPST DIP-8",
+      "package": {
+        "pins": 16,
+        "view": "top",
+        "numbering": "1脚左上，顶视图逆时针；触点配对1-16、2-15、…、8-9"
+      },
+      "pins": {
+        "1": "SEL_A",
+        "2": "SEL_B",
+        "3": "SEL_C",
+        "14": "+5V",
+        "15": "+5V",
+        "16": "+5V"
+      },
+      "contactPairs": [
+        [
+          1,
+          16
+        ],
+        [
+          2,
+          15
+        ],
+        [
+          3,
+          14
+        ],
+        [
+          4,
+          13
+        ],
+        [
+          5,
+          12
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          7,
+          10
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "unusedPins": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "actualOffBiasConfirmed": false
     }
   },
   "fpga_ports": [
@@ -479,8 +542,8 @@ window.CIRCUIT_REFERENCE = {
       "kind": "R",
       "value": "10k",
       "nets": [
-        "ADC_RCLK",
-        "ADC_CLK"
+        "ADC_CLK",
+        "ADC_RCLK"
       ]
     },
     {
@@ -543,7 +606,7 @@ window.CIRCUIT_REFERENCE = {
       "value": "1k",
       "nets": [
         "led_short",
-        "LED_SHORT_A"
+        "LED_S_A"
       ]
     },
     {
@@ -552,7 +615,7 @@ window.CIRCUIT_REFERENCE = {
       "value": "1k",
       "nets": [
         "led_open",
-        "LED_OPEN_A"
+        "LED_O_A"
       ]
     },
     {
@@ -560,7 +623,7 @@ window.CIRCUIT_REFERENCE = {
       "kind": "LED",
       "value": "RED",
       "nets": [
-        "LED_SHORT_A",
+        "LED_S_A",
         "GND"
       ]
     },
@@ -569,7 +632,7 @@ window.CIRCUIT_REFERENCE = {
       "kind": "LED",
       "value": "RED",
       "nets": [
-        "LED_OPEN_A",
+        "LED_O_A",
         "GND"
       ]
     },
@@ -635,6 +698,18 @@ window.CIRCUIT_REFERENCE = {
       "confirmedPhysicalPins": {
         "3": "common cathode",
         "8": "common cathode"
+      },
+      "schematicPinNets": {
+        "1": "U_a",
+        "2": "U_b",
+        "3": "U_COM3",
+        "4": "U_c",
+        "5": "U_d",
+        "6": "U_e",
+        "7": "U_f",
+        "8": "U_COM8",
+        "9": "U_g",
+        "10": "NC_DP"
       }
     },
     "tens": {
@@ -657,6 +732,18 @@ window.CIRCUIT_REFERENCE = {
       "confirmedPhysicalPins": {
         "3": "common cathode",
         "8": "common cathode"
+      },
+      "schematicPinNets": {
+        "1": "T_a",
+        "2": "T_b",
+        "3": "T_COM3",
+        "4": "T_c",
+        "5": "T_d",
+        "6": "T_e",
+        "7": "T_f",
+        "8": "T_COM8",
+        "9": "T_g",
+        "10": "NC_DP"
       }
     }
   },
@@ -741,7 +828,16 @@ window.CIRCUIT_REFERENCE = {
         "selectedMuxChannel": "CH7",
         "c": 1
       }
-    ]
+    ],
+    "reference": "DIP",
+    "contactPinNets": {
+      "1": "SEL_A",
+      "2": "SEL_B",
+      "3": "SEL_C",
+      "14": "+5V",
+      "15": "+5V",
+      "16": "+5V"
+    }
   },
   "new_components": [],
   "excluded_FPGA_simulation_helpers": [
@@ -797,7 +893,7 @@ window.CIRCUIT_REFERENCE = {
     ]
   ],
   "physical_interface_status": "Board LOC and voltage interface unresolved. Wires denote logical signal correspondence, not approval for direct 5V-to-3.3V physical wiring.",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "title": "数字式电缆对线器 · 手动八路面包板接线参考",
   "currentDesign": "manual8-fpga-controlled-adc",
   "description": "保留当前手动八路仿真的器件与网络。芯片脚号为原厂PDIP顶视图；FPGA为40针开发板示意，接口编号不等同于封装P脚号。",
@@ -867,7 +963,31 @@ window.CIRCUIT_REFERENCE = {
       19
     ],
     "packagePadMapping": {},
-    "pinCount": 40
+    "pinCount": 40,
+    "schematicPinNets": {
+      "1": "adc_code[0]",
+      "2": "adc_code[1]",
+      "3": "adc_code[2]",
+      "4": "adc_code[3]",
+      "5": "adc_code[4]",
+      "6": "intr_n",
+      "7": "adc_cs_n",
+      "8": "adc_rd_n",
+      "9": "adc_wr_n",
+      "10": "bcd_units[0]",
+      "11": "bcd_units[1]",
+      "12": "bcd_units[2]",
+      "13": "bcd_units[3]",
+      "14": "bcd_tens[0]",
+      "15": "bcd_tens[1]",
+      "16": "blank_n",
+      "17": "clk",
+      "21": "led_short",
+      "22": "led_open",
+      "23": "rst_n",
+      "40": "GND"
+    },
+    "schematicPinNote": "schematicPinNets仅用于对照网页的40针逻辑模型，不是实物开发板接口分配表。clockHeader=17也不是芯片封装P17。"
   },
   "clock": {
     "rbOhm": 3900,
@@ -899,7 +1019,7 @@ window.CIRCUIT_REFERENCE = {
     {
       "title": "FPGA接口电平待核对",
       "severity": "unresolved",
-      "detail": "555与ADC使用5V。开发板接口保护/转换能力未知，逻辑网络不表示5V信号可直接接入3.3V FPGA。保留原有元件，不新增转换器。",
+      "detail": "NE555和ADC使用5V供电，须分别核对555实际OUT电平与ADC DB3–DB7、/INTR的输出电平及开发板接口耐压/转换能力。NE555手册3.3V典型值对应特定输出负载，不是轻载保证或最大值，不能据此认定可直连3.3V FPGA。网页只表示逻辑信号对应，不新增或假定板上电平转换器。",
       "id": "fpga-voltage"
     },
     {
@@ -908,6 +1028,13 @@ window.CIRCUIT_REFERENCE = {
       "detail": "实物选用CD4511BE。其5V供电时VIH最小3.5V，3.3V FPGA输出不满足保证门限；DISPLAY_VDD及板载接口方案待确认。",
       "minimumHighAt5V": 3.5,
       "id": "cd4511-voltage"
+    },
+    {
+      "id": "adc-reference",
+      "title": "ADC0804量程待实物验证",
+      "severity": "check",
+      "detail": "TI ADC0804-N手册允许VREF/2（9脚）悬空，内部参考约为VCC/2；本方案据5V供电、0–5V量程选Rx并取DB3–DB7。悬空不是接错。实物须核对供电与参考配置，注入已知电压（如2.500V）验证原始8位码约128及量程；ADC自时钟电容接CLK IN（4脚）至地，CLK R（19脚）经10k接4脚，不应重负载CLK R。",
+      "sourceId": "ti-adc0804"
     },
     {
       "title": "排针编号与封装管脚不同",
@@ -995,14 +1122,17 @@ window.CIRCUIT_REFERENCE = {
         "ADC.20",
         "R_PULL.1",
         "C_ADC.1",
-        "RA.1"
+        "RA.1",
+        "DIP.14",
+        "DIP.15",
+        "DIP.16"
       ]
     },
     {
       "name": "ADC_CLK",
       "endpoints": [
         "ADC.4",
-        "R_CLK.2",
+        "R_CLK.1",
         "C_CLK.1"
       ]
     },
@@ -1052,7 +1182,7 @@ window.CIRCUIT_REFERENCE = {
       "name": "ADC_RCLK",
       "endpoints": [
         "ADC.19",
-        "R_CLK.1"
+        "R_CLK.2"
       ]
     },
     {
@@ -1234,12 +1364,13 @@ window.CIRCUIT_REFERENCE = {
         "C_ADC.2",
         "CT.2",
         "C_CV.2",
-        "LED_SHORT.K",
-        "LED_OPEN.K",
+        "LED_SHORT.2",
+        "LED_OPEN.2",
         "RTC3.2",
         "RTC8.2",
         "RUC3.2",
-        "RUC8.2"
+        "RUC8.2",
+        "FPGA.GND"
       ]
     },
     {
@@ -1257,10 +1388,10 @@ window.CIRCUIT_REFERENCE = {
       ]
     },
     {
-      "name": "LED_OPEN_A",
+      "name": "LED_O_A",
       "endpoints": [
         "R_OPEN.2",
-        "LED_OPEN.A"
+        "LED_OPEN.1"
       ]
     },
     {
@@ -1271,10 +1402,10 @@ window.CIRCUIT_REFERENCE = {
       ]
     },
     {
-      "name": "LED_SHORT_A",
+      "name": "LED_S_A",
       "endpoints": [
         "R_SHORT.2",
-        "LED_SHORT.A"
+        "LED_SHORT.1"
       ]
     },
     {
@@ -1287,21 +1418,21 @@ window.CIRCUIT_REFERENCE = {
       "name": "SEL_A",
       "endpoints": [
         "MUX.11",
-        "DIP.SEL_A"
+        "DIP.1"
       ]
     },
     {
       "name": "SEL_B",
       "endpoints": [
         "MUX.10",
-        "DIP.SEL_B"
+        "DIP.2"
       ]
     },
     {
       "name": "SEL_C",
       "endpoints": [
         "MUX.9",
-        "DIP.SEL_C"
+        "DIP.3"
       ]
     },
     {
@@ -1459,5 +1590,40 @@ window.CIRCUIT_REFERENCE = {
     "resistorPerCommonPinOhm": 1000,
     "totalDisplayResistors": 4
   },
-  "referenceBasis": "项目整理的手动八路逻辑网络；课程资料和内部工程文件未分发，电气连接以本文件为公开参考。"
-};
+  "referenceBasis": "本文件仅作为公开的逻辑网络文档，不在网页运行或离线构建时加载。网表与网页默认示意方案逐网校验；实物接口、电平与未确认段脚仍须独立核对。",
+  "modelPartIds": {
+    "555": "U3",
+    "MUX": "U1",
+    "ADC": "U2",
+    "UNITS": "U5",
+    "TENS": "U4",
+    "DIP": "SW1",
+    "FPGA": "U6",
+    "DISPLAY_units": "DS2",
+    "DISPLAY_tens": "DS1",
+    "R_PULL": "R0",
+    "R_CLK": "RCLK",
+    "C_CLK": "CCLK",
+    "C_ADC": "CDEC",
+    "C_CV": "CCV",
+    "RA": "RA",
+    "RB": "RB",
+    "CT": "CT",
+    "R_SHORT": "RS",
+    "R_OPEN": "RO",
+    "LED_SHORT": "LED1",
+    "LED_OPEN": "LED2",
+    "RTC3": "RTC3",
+    "RTC8": "RTC8",
+    "RUC3": "RUC3",
+    "RUC8": "RUC8",
+    "RX1": "RX1",
+    "RX2": "RX2",
+    "RX3": "RX3",
+    "RX4": "RX4",
+    "RX5": "RX5",
+    "RX6": "RX6",
+    "RX7": "RX7",
+    "RX8": "RX8"
+  }
+}
